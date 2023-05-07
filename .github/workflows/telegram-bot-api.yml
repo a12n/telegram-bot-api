@@ -1,4 +1,4 @@
-name: telegram-bot-api
+name: Telegram Bot API
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  Build:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
