@@ -8,18 +8,24 @@ on:
 
 jobs:
   Build:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-2019]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
       - run: sudo apt-get install -y cmake g++ gperf libssl-dev make zlib1g-dev
+        if: runner.os == 'Linux'
+      - run: vcpkg install gperf:x64-windows openssl:x64-windows zlib:x64-windows
+        if: runner.os == 'Windows'
       - run: mkdir build
       - run: cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=.. ..
-        env:
-          CXXFLAGS: "-stdlib=libc++"
-          CC: /usr/bin/clang-14
-          CXX: /usr/bin/clang++-14
+        if: runner.os == 'Linux'
+        working-directory: build
+      - run: cmake -A x64 -DCMAKE_INSTALL_PREFIX:PATH=.. -DCMAKE_TOOLCHAIN_FILE:FILEPATH=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake ..
+        if: runner.os == 'Windows'
         working-directory: build
       - run: cmake --build build --target install
       - uses: actions/upload-artifact@v3
