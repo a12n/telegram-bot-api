@@ -18,9 +18,9 @@ jobs:
       - run: mkdir build
       - run: cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=.. ..
         env:
-          CXXFLAGS="-stdlib=libc++"
-          CC=/usr/bin/clang-14
-          CXX=/usr/bin/clang++-14
+          CXXFLAGS: "-stdlib=libc++"
+          CC: /usr/bin/clang-14
+          CXX: /usr/bin/clang++-14
         working-directory: build
       - run: cmake --build build --target install
       - uses: actions/upload-artifact@v3
