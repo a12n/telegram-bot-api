@@ -1,0 +1,28 @@
+name: telegram-bot-api
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      # - run: sudo apt-get install -y cmake g++ gperf libssl-dev make zlib1g-dev
+      - run: sudo apt-get install -y clang-14 cmake gperf libc++-dev libc++abi-dev libssl-dev make zlib1g-dev
+      - run: mkdir build
+      - run: cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=.. ..
+        env:
+          CXXFLAGS="-stdlib=libc++"
+          CC=/usr/bin/clang-14
+          CXX=/usr/bin/clang++-14
+        working-directory: build
+      - run: cmake --build build --target install
+      - uses: actions/upload-artifact@v3
+        with:
+          path: telegram-bot-api/bin/telegram-bot-api
