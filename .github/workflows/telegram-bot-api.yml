@@ -36,3 +36,4 @@ jobs:
             bin/libcrypto-*.dll
             bin/libssl-*.dll
             bin/zlib*.dll
+            !bin/telegram-bot-api.pdb
