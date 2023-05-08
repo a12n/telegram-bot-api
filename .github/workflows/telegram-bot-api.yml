@@ -31,4 +31,8 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: telegram-bot-api_${{ matrix.os }}
-          path: bin/telegram-bot-api
+          path: |
+            bin/telegram-bot-api*
+            bin/libcrypto-*.dll
+            bin/libssl-*.dll
+            bin/zlib*.dll
