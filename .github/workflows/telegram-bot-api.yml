@@ -13,6 +13,8 @@ jobs:
         os: [windows-2019]
     runs-on: ${{ matrix.os }}
     steps:
+      - run: Get-ChildItem -Path "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise" -Recurse
+        if: runner.os == 'Windows'
       - uses: actions/checkout@v3
         with:
           submodules: recursive
