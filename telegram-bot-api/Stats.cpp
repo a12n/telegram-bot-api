@@ -1,5 +1,5 @@
 //
-// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2023
+// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2025
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -7,6 +7,7 @@
 #include "telegram-bot-api/Stats.h"
 
 #include "td/utils/common.h"
+#include "td/utils/logging.h"
 #include "td/utils/port/thread.h"
 #include "td/utils/SliceBuilder.h"
 #include "td/utils/StringBuilder.h"
@@ -19,17 +20,27 @@ ServerCpuStat::ServerCpuStat() {
   }
 }
 
-void ServerCpuStat::add_event(const td::CpuStat &cpu_stat, double now) {
-  std::lock_guard<std::mutex> guard(mutex_);
-  for (auto &stat : stat_) {
-    stat.add_event(cpu_stat, now);
+void ServerCpuStat::update(double now) {
+  auto r_cpu_stat = td::cpu_stat();
+  if (r_cpu_stat.is_error()) {
+    if (r_cpu_stat.error().message() != "Not supported") {
+      LOG(ERROR) << "Failed to get CPU statistics: " << r_cpu_stat.error();
+    }
+    return;
   }
+
+  auto &cpu_stat = instance();
+  std::lock_guard<std::mutex> guard(cpu_stat.mutex_);
+  for (auto &stat : cpu_stat.stat_) {
+    stat.add_event(r_cpu_stat.ok(), now);
+  }
+  LOG(WARNING) << "CPU usage: " << cpu_stat.stat_[1].get_stat(now).as_vector()[0].value_;
 }
 
-td::string ServerCpuStat::get_description() const {
+td::string ServerCpuStat::get_description() {
   td::string res = "DURATION";
   for (auto &descr : DESCR) {
-    res += "\t";
+    res += '\t';
     res += descr;
   }
   return res;
@@ -37,7 +48,7 @@ td::string ServerCpuStat::get_description() const {
 
 static td::string to_percentage(td::uint64 ticks, td::uint64 total_ticks) {
   static double multiplier = 100.0 * (td::thread::hardware_concurrency() ? td::thread::hardware_concurrency() : 1);
-  return PSTRING() << (static_cast<double>(ticks) / static_cast<double>(total_ticks) * multiplier) << "%";
+  return PSTRING() << (static_cast<double>(ticks) / static_cast<double>(total_ticks) * multiplier) << '%';
 }
 
 td::vector<StatItem> CpuStat::as_vector() const {
@@ -71,9 +82,6 @@ td::vector<StatItem> ServerCpuStat::as_vector(double now) {
   }
   return res;
 }
-
-constexpr int ServerCpuStat::DURATIONS[SIZE];
-constexpr const char *ServerCpuStat::DESCR[SIZE];
 
 void ServerBotStat::normalize(double duration) {
   if (duration == 0) {
@@ -140,7 +148,7 @@ td::vector<StatItem> BotStatActor::as_vector(double now) {
   return res;
 }
 
-td::string BotStatActor::get_description() const {
+td::string BotStatActor::get_description() {
   td::string res = "DURATION";
   for (auto &descr : DESCR) {
     res += "\t";
@@ -189,8 +197,5 @@ td::int64 BotStatActor::get_active_file_upload_count() const {
 bool BotStatActor::is_active(double now) const {
   return last_activity_timestamp_ > now - 86400;
 }
-
-constexpr int BotStatActor::DURATIONS[SIZE];
-constexpr const char *BotStatActor::DESCR[SIZE];
 
 }  // namespace telegram_bot_api

@@ -1,5 +1,5 @@
 //
-// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2023
+// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2025
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -66,6 +66,8 @@ class ClientManager final : public td::Actor {
 
   td::FlatHashMap<td::string, td::uint64> token_to_id_;
   td::FlatHashMap<td::string, td::FloodControlFast> flood_controls_;
+  td::FloodControlFast global_flood_control_;
+  bool is_global_flood_control_enabled_ = false;
   td::FlatHashMap<td::int64, td::uint64> active_client_count_;
 
   bool close_flag_ = false;

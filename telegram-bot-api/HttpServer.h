@@ -1,10 +1,12 @@
 //
-// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2023
+// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2025
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 #pragma once
+
+#include "telegram-bot-api/ClientParameters.h"
 
 #include "td/net/HttpInboundConnection.h"
 #include "td/net/TcpListener.h"
@@ -61,13 +63,8 @@ class HttpServer final : public td::TcpListener::Callback {
   }
 
   void accept(td::SocketFd fd) final {
-    auto scheduler_count = td::Scheduler::instance()->sched_count();
-    auto scheduler_id = scheduler_count - 1;
-    if (scheduler_id > 0) {
-      scheduler_id--;
-    }
     td::create_actor<td::HttpInboundConnection>("HttpInboundConnection", td::BufferedFd<td::SocketFd>(std::move(fd)), 0,
-                                                50, 500, creator_(), scheduler_id)
+                                                50, 500, creator_(), SharedData::get_slow_incoming_http_scheduler_id())
         .release();
   }
 
